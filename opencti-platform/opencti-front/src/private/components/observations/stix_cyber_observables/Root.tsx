@@ -4,11 +4,12 @@
 // @ts-nocheck
 import React, { FunctionComponent, useEffect, useMemo } from 'react';
 import { Route, Switch, Link, useParams, useLocation, useRouteMatch } from 'react-router-dom';
-import { graphql, loadQuery, usePreloadedQuery, useQueryLoader, useSubscription } from 'react-relay';
+import { graphql, usePreloadedQuery, useQueryLoader, useSubscription } from 'react-relay';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { PreloadedQuery } from 'react-relay/relay-hooks/EntryPointTypes';
+import { RootStixCyberObservableQuery } from '@components/observations/stix_cyber_observables/__generated__/RootStixCyberObservableQuery.graphql';
 import StixCoreRelationship from '../../common/stix_core_relationships/StixCoreRelationship';
 import StixCyberObservable from './StixCyberObservable';
 import StixCyberObservableKnowledge from './StixCyberObservableKnowledge';
@@ -20,8 +21,6 @@ import StixCoreObjectOrStixCoreRelationshipContainers from '../../common/contain
 import FileManager from '../../common/files/FileManager';
 import { useFormatter } from '../../../../components/i18n';
 import Loader from '../../../../components/Loader';
-import { environment } from '../../../../relay/environment';
-import { RootStixCyberObservableQuery } from '@components/observations/stix_cyber_observables/__generated__/RootStixCyberObservableQuery.graphql';
 
 const subscription = graphql`
   subscription RootStixCyberObservableSubscription($id: ID!) {
@@ -71,31 +70,10 @@ const stixCyberObservableQuery = graphql`
   }
 `;
 
-const Toto = () => {
-  const { observableId = '' } = useParams();
-
-  const variables: stixCyberObservableQuery$variables = useMemo(() => ({ id: observableId, relationship_type: 'indicates' }), [observableId]);
-  useRootStixCyberObservableSubscription(observableId);
-  const [queryRef, fetchLoadQuery] = useQueryLoader<RootStixCyberObservableQuery>(
-    stixCyberObservableQuery,
-  );
-  useEffect(
-    () => {
-      fetchLoadQuery(variables);
-    },
-    [],
-  );
-  return queryRef ? (
-    <React.Suspense fallback={<Loader />}>
-      <RenderRootStixCyberObservable queryRef={queryRef} />
-    </React.Suspense>
-  ) : (<Loader />)
-};
-
 const RenderRootStixCyberObservable: FunctionComponent<{ queryRef: PreloadedQuery<RootStixCyberObservableQuery> }> = ({ queryRef }) => {
-  const { path } = useRouteMatch();
+  const { path, url } = useRouteMatch();
   const { observableId = '' } = useParams();
-
+  const linkKnowledge = `${url}/knowledge`;
   const data = usePreloadedQuery(
     stixCyberObservableQuery,
     queryRef,
@@ -198,6 +176,27 @@ const RenderRootStixCyberObservable: FunctionComponent<{ queryRef: PreloadedQuer
   );
 };
 
+const StixCyberObservableContent = () => {
+  const { observableId = '' } = useParams();
+
+  const variables: stixCyberObservableQuery$variables = { id: observableId, relationship_type: 'indicates' };
+  useRootStixCyberObservableSubscription(observableId);
+  const [queryRef, fetchLoadQuery] = useQueryLoader<RootStixCyberObservableQuery>(
+    stixCyberObservableQuery,
+  );
+  useEffect(
+    () => {
+      fetchLoadQuery(variables);
+    },
+    [],
+  );
+  return queryRef ? (
+    <React.Suspense fallback={<Loader />}>
+      <RenderRootStixCyberObservable queryRef={queryRef} />
+    </React.Suspense>
+  ) : (<Loader />);
+};
+
 const RootStixCyberObservable = () => {
   const { t } = useFormatter();
   const location = useLocation();
@@ -268,7 +267,7 @@ const RootStixCyberObservable = () => {
           />
         </Tabs>
       </Box>
-      <Toto />
+      <StixCyberObservableContent/>
     </>
   );
 };
