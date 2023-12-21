@@ -29,7 +29,6 @@ const StixCyberObservableKnowledge = createFragmentContainer(
       fragment StixCyberObservableKnowledge_stixCyberObservable on StixCyberObservable {
         id
         entity_type
-        ...StixCyberObservableHeader_stixCyberObservable
         ...StixCyberObservableIndicators_stixCyberObservable
       }
     `,

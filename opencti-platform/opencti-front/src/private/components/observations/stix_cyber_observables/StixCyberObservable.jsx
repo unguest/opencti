@@ -129,7 +129,6 @@ const StixCyberObservable = createFragmentContainer(
         observable_value
         x_opencti_score
         ...StixCyberObservableDetails_stixCyberObservable
-        ...StixCyberObservableHeader_stixCyberObservable
       }
     `,
   },

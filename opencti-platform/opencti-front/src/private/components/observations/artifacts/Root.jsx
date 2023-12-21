@@ -40,7 +40,6 @@ const rootArtifactQuery = graphql`
       standard_id
       entity_type
       ...StixCyberObservable_stixCyberObservable
-      ...StixCyberObservableHeader_stixCyberObservable
       ...StixCyberObservableDetails_stixCyberObservable
       ...StixCyberObservableIndicators_stixCyberObservable
       ...StixCyberObservableKnowledge_stixCyberObservable

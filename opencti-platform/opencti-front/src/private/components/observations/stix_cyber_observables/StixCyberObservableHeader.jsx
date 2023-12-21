@@ -1,5 +1,5 @@
-import React from 'react';
-import { graphql, createFragmentContainer } from 'react-relay';
+import React, { useEffect } from 'react';
+import { graphql, createFragmentContainer, useQueryLoader, usePreloadedQuery, useLazyLoadQuery } from 'react-relay';
 import Typography from '@mui/material/Typography';
 import makeStyles from '@mui/styles/makeStyles';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -7,6 +7,8 @@ import StixCyberObservablePopover from './StixCyberObservablePopover';
 import { truncate } from '../../../../utils/String';
 import StixCoreObjectEnrichment from '../../common/stix_core_objects/StixCoreObjectEnrichment';
 import StixCoreObjectSharing from '../../common/stix_core_objects/StixCoreObjectSharing';
+import { useParams } from "react-router-dom";
+import Loader from "../../../../components/Loader";
 
 const useStyles = makeStyles(() => ({
   title: {
@@ -22,12 +24,27 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const StixCyberObservableHeaderComponent = ({
-  stixCyberObservable,
+const stixCyberObservableQuery = graphql`
+  query StixCyberObservableHeaderQuery($id: String!) {
+    stixCyberObservable(id: $id) {
+      id
+      observable_value
+      entity_type
+    }
+  }
+`;
+
+const StixCyberObservableHeader = ({
   isArtifact,
   disableSharing,
 }) => {
   const classes = useStyles();
+  const { observableId = '' } = useParams();
+  const { stixCyberObservable } = useLazyLoadQuery(
+    stixCyberObservableQuery,
+    { id: observableId },
+    {fetchPolicy: 'store-or-network'},
+  );
   return (
     <div>
       <Typography
@@ -58,18 +75,5 @@ const StixCyberObservableHeaderComponent = ({
     </div>
   );
 };
-
-const StixCyberObservableHeader = createFragmentContainer(
-  StixCyberObservableHeaderComponent,
-  {
-    stixCyberObservable: graphql`
-      fragment StixCyberObservableHeader_stixCyberObservable on StixCyberObservable {
-        id
-        entity_type
-        observable_value
-      }
-    `,
-  },
-);
 
 export default StixCyberObservableHeader;

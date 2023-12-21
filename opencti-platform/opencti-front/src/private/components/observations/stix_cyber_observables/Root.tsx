@@ -4,7 +4,7 @@
 // @ts-nocheck
 import React, { FunctionComponent, useEffect, useMemo } from 'react';
 import { Route, Switch, Link, useParams, useLocation, useRouteMatch } from 'react-router-dom';
-import { graphql, usePreloadedQuery, useQueryLoader, useSubscription } from 'react-relay';
+import { graphql, loadQuery, usePreloadedQuery, useQueryLoader, useSubscription } from 'react-relay';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -20,6 +20,8 @@ import StixCoreObjectOrStixCoreRelationshipContainers from '../../common/contain
 import FileManager from '../../common/files/FileManager';
 import { useFormatter } from '../../../../components/i18n';
 import Loader from '../../../../components/Loader';
+import { environment } from '../../../../relay/environment';
+import { RootStixCyberObservableQuery } from '@components/observations/stix_cyber_observables/__generated__/RootStixCyberObservableQuery.graphql';
 
 const subscription = graphql`
   subscription RootStixCyberObservableSubscription($id: ID!) {
@@ -52,7 +54,6 @@ const stixCyberObservableQuery = graphql`
       standard_id
       entity_type
       ...StixCyberObservable_stixCyberObservable
-      ...StixCyberObservableHeader_stixCyberObservable
       ...StixCyberObservableDetails_stixCyberObservable
       ...StixCyberObservableIndicators_stixCyberObservable
       ...StixCyberObservableKnowledge_stixCyberObservable
@@ -70,87 +71,53 @@ const stixCyberObservableQuery = graphql`
   }
 `;
 
-const RenderRootStixCyberObservable: FunctionComponent<{ queryRef: PreloadedQuery<stixCyberObservableQuery> }> = ({ queryRef }) => {
-  const { path, url } = useRouteMatch();
+const Toto = () => {
   const { observableId = '' } = useParams();
-  const { t } = useFormatter();
-  const location = useLocation();
-  const linkKnowledge = `${url}/knowledge`;
-  const data = usePreloadedQuery<stixCyberObservableQuery>(
+
+  const variables: stixCyberObservableQuery$variables = useMemo(() => ({ id: observableId, relationship_type: 'indicates' }), [observableId]);
+  useRootStixCyberObservableSubscription(observableId);
+  const [queryRef, fetchLoadQuery] = useQueryLoader<RootStixCyberObservableQuery>(
+    stixCyberObservableQuery,
+  );
+  useEffect(
+    () => {
+      fetchLoadQuery(variables);
+    },
+    [],
+  );
+  return queryRef ? (
+    <React.Suspense fallback={<Loader />}>
+      <RenderRootStixCyberObservable queryRef={queryRef} />
+    </React.Suspense>
+  ) : (<Loader />)
+};
+
+const RenderRootStixCyberObservable: FunctionComponent<{ queryRef: PreloadedQuery<RootStixCyberObservableQuery> }> = ({ queryRef }) => {
+  const { path } = useRouteMatch();
+  const { observableId = '' } = useParams();
+
+  const data = usePreloadedQuery(
     stixCyberObservableQuery,
     queryRef,
   );
-  return <>
-    <StixCyberObservableHeader
-      isArtifact={undefined}
-      disableSharing={undefined}
-      stixCyberObservable={data.stixCyberObservable}
-    />
-    <Box
-      sx={{
-        borderBottom: 1,
-        borderColor: 'divider',
-        marginBottom: 4,
-      }}
-    >
-      <Tabs
-        value={
-          location.pathname.includes(linkKnowledge)
-            ? linkKnowledge
-            : location.pathname
-        }
-      >
-        <Tab
-          replace
-          component={Link}
-          to={`${url}`}
-          value={`${url}`}
-          label={t('Overview')}
-        />
-        <Tab
-          replace
-          component={Link}
-          to={linkKnowledge}
-          value={linkKnowledge}
-          label={t('Knowledge')}
-        />
-        <Tab
-          replace
-          component={Link}
-          to={`${url}/analyses`}
-          value={`${url}/analyses`}
-          label={t('Analyses')}
-        />
-        <Tab
-          replace
-          component={Link}
-          to={`${url}/sightings`}
-          value={`${url}/sightings`}
-          label={t('Sightings')}
-        />
-        <Tab
-          replace
-          component={Link}
-          to={`${url}/files`}
-          value={`${url}/files`}
-          label={t('Data')}
-        />
-        <Tab
-          replace
-          component={Link}
-          to={`${url}/history`}
-          value={`${url}/history`}
-          label={t('History')}
-        />
-      </Tabs>
-    </Box>
+  return (
     <Switch>
       <Route
-        path={`${path}`}
+        path={`${path}/knowledge/relations/:relationId`}
         render={(routeProps: object) => (
-          <StixCyberObservable
+          <StixCoreRelationship
+            entityId={observableId}
             {...routeProps}
-            stixCyberObservable={data.stixCyberObservable}
+          />
+        )}
+      />
+      <Route
+        path={`${path}/knowledge/sightings/:sightingId`}
+        render={(routeProps: object) => (
+          <StixSightingRelationship
+            paddingRight={false}
+            entityId={observableId}
+            {...routeProps}
           />
         )}
       />
@@ -219,48 +186,90 @@ const RenderRootStixCyberObservable: FunctionComponent<{ queryRef: PreloadedQuer
         )}
       />
       <Route
-        path={`${path}/knowledge/relations/:relationId`}
+        path={`${path}`}
         render={(routeProps: object) => (
-          <StixCoreRelationship
-            entityId={observableId}
+          <StixCyberObservable
             {...routeProps}
-          />
-        )}
-      />
-      <Route
-        path={`${path}/knowledge/sightings/:sightingId`}
-        render={(routeProps: object) => (
-          <StixSightingRelationship
-            paddingRight={false}
-            entityId={observableId}
-            {...routeProps}
+            stixCyberObservable={data.stixCyberObservable}
           />
         )}
       />
     </Switch>
-  </>;
+  );
 };
 
 const RootStixCyberObservable = () => {
-  const { observableId = '' } = useParams();
-  const variables: stixCyberObservableQuery$variables = { id: observableId, relationship_type: 'indicates' };
-  useRootStixCyberObservableSubscription(observableId);
-  const [queryRef, fetchLoadQuery] = useQueryLoader<stixCyberObservableQuery>(
-    stixCyberObservableQuery,
-  );
-  useEffect(
-    () => {
-      fetchLoadQuery(variables);
-    },
-    [],
-  );
-  console.log('Render RootStixCyberObservable');
-  return queryRef ? (
-    <React.Suspense fallback={<Loader />}>
-      <RenderRootStixCyberObservable queryRef={queryRef}/>
-    </React.Suspense>
-  ) : (
-    <Loader />
+  const { t } = useFormatter();
+  const location = useLocation();
+  const { url } = useRouteMatch();
+  const linkKnowledge = `${url}/knowledge`;
+
+  return (
+    <>
+      <StixCyberObservableHeader
+        isArtifact={undefined}
+        disableSharing={undefined}
+      />
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          marginBottom: 4,
+        }}
+      >
+        <Tabs
+          value={
+            location.pathname.includes(linkKnowledge)
+              ? linkKnowledge
+              : location.pathname
+          }
+        >
+          <Tab
+            replace
+            component={Link}
+            to={`${url}`}
+            value={`${url}`}
+            label={t('Overview')}
+          />
+          <Tab
+            replace
+            component={Link}
+            to={linkKnowledge}
+            value={linkKnowledge}
+            label={t('Knowledge')}
+          />
+          <Tab
+            replace
+            component={Link}
+            to={`${url}/analyses`}
+            value={`${url}/analyses`}
+            label={t('Analyses')}
+          />
+          <Tab
+            replace
+            component={Link}
+            to={`${url}/sightings`}
+            value={`${url}/sightings`}
+            label={t('Sightings')}
+          />
+          <Tab
+            replace
+            component={Link}
+            to={`${url}/files`}
+            value={`${url}/files`}
+            label={t('Data')}
+          />
+          <Tab
+            replace
+            component={Link}
+            to={`${url}/history`}
+            value={`${url}/history`}
+            label={t('History')}
+          />
+        </Tabs>
+      </Box>
+      <Toto />
+    </>
   );
 };
 
