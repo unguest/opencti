@@ -1745,7 +1745,7 @@ const buildLocalMustFilter = async (validFilter) => {
     if (arrayKeys.length > 1) {
       throw UnsupportedError('Filter must have only one field', { keys: arrayKeys });
     } else {
-      const schemaKey = schemaAttributesDefinition.getAttributeByName(R.head(arrayKeys));
+      const filterDefinition = schemaAttributesDefinition.getAttributeByName(R.head(arrayKeys));
       let valueFiltering = { // classic filters: field doesn't exist
         bool: {
           must_not: {
@@ -1755,8 +1755,8 @@ const buildLocalMustFilter = async (validFilter) => {
           }
         }
       };
-      if (schemaKey?.type === 'string') {
-        if (schemaKey?.format === 'text') { // text filters: use wildcard
+      if (filterDefinition?.type === 'string') {
+        if (filterDefinition?.format === 'text') { // text filters: use wildcard
           valueFiltering = {
             bool: {
               must_not: {
@@ -1794,14 +1794,14 @@ const buildLocalMustFilter = async (validFilter) => {
     if (arrayKeys.length > 1) {
       throw UnsupportedError('Filter must have only one field', { keys: arrayKeys });
     } else {
-      const schemaKey = schemaAttributesDefinition.getAttributeByName(R.head(arrayKeys));
+      const filterDefinition = schemaAttributesDefinition.getAttributeByName(R.head(arrayKeys));
       let valueFiltering = { // classic filters: field exists
         exists: {
           field: R.head(arrayKeys)
         }
       };
-      if (schemaKey?.type === 'string') {
-        if (schemaKey?.format === 'text') { // text filters: use wildcard
+      if (filterDefinition?.type === 'string') {
+        if (filterDefinition?.format === 'text') { // text filters: use wildcard
           valueFiltering = {
             bool: {
               must: {
