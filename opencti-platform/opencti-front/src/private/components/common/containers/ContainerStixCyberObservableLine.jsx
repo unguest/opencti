@@ -88,6 +88,7 @@ const ContainerStixCyberObservableLineComponent = (props) => {
     deSelectedElements,
     selectAll,
     setSelectedElements,
+    enableReferences,
   } = props;
   const classes = useStyles();
   const { t_i18n, fd, n } = useFormatter();
@@ -219,17 +220,17 @@ const ContainerStixCyberObservableLineComponent = (props) => {
         ) : (
           <Security needs={[KNOWLEDGE_KNUPDATE]}>
             <ContainerStixCoreObjectPopover
-              containerId={containerId}
-              toId={node.id}
-              toStandardId={node.standard_id}
-              menuDisable={isOnlyThroughInference}
-              relationshipType="object"
-              paginationKey="Pagination_objects"
-              paginationOptions={paginationOptions}
-              selectedElements={selectedElements}
-              setSelectedElements={setSelectedElements}
-            />
-          </Security>
+            containerId={containerId}
+            toId={node.id}
+            toStandardId={node.standard_id}
+            menuDisable={isOnlyThroughInference}
+            relationshipType="object"
+            paginationKey="Pagination_objects"
+            paginationOptions={paginationOptions}
+            selectedElements={selectedElements}
+            setSelectedElements={setSelectedElements}
+            enableReferences={enableReferences}
+          /></Security>
         )}
       </ListItemSecondaryAction>
     </ListItem>

@@ -59,6 +59,7 @@ const ContainerStixObjectOrStixRelationshipLineComponent = ({
   dataColumns,
   containerId,
   paginationOptions,
+  enableReferences,
 }) => {
   const classes = useStyles();
   const { t_i18n, fd } = useFormatter();
@@ -152,14 +153,14 @@ const ContainerStixObjectOrStixRelationshipLineComponent = ({
       <ListItemSecondaryAction>
         <Security needs={[KNOWLEDGE_KNUPDATE]}>
           <ContainerStixCoreObjectPopover
-            containerId={containerId}
-            toId={node.id}
-            toStandardId={node.standard_id}
-            relationshipType="object"
-            paginationKey="Pagination_objects"
-            paginationOptions={paginationOptions}
-          />
-        </Security>
+          containerId={containerId}
+          toId={node.id}
+          toStandardId={node.standard_id}
+          relationshipType="object"
+          paginationKey="Pagination_objects"
+          paginationOptions={paginationOptions}
+          enableReferences={enableReferences}
+        /></Security>
       </ListItemSecondaryAction>
     </ListItem>
   );
