@@ -145,6 +145,13 @@ const extractTokenFromBasicAuth = async (authorization) => {
   return null;
 };
 
+/**
+ * Find user by id
+ * @param context the global execution context
+ * @param user the current user
+ * @param userId the id of user to resolve
+ * @returns {Promise<AuthUser>}
+ */
 export const findById = async (context, user, userId) => {
   if (!isUserHasCapability(user, SETTINGS_SET_ACCESSES) && user.id !== userId) {
     // if no organization in common with the logged user
@@ -158,7 +165,9 @@ export const findById = async (context, user, userId) => {
     return INTERNAL_USERS[userId];
   }
   const data = await resolveUserByIdFromCache(context, userId);
-  return data ? R.dissoc('password', data) : data;
+  if (!data) throw FunctionalError('User not found', { id: userId });
+  data.password = '*** Redacted ***';
+  return data;
 };
 
 export const findAll = async (context, user, args) => {
