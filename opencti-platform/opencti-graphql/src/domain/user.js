@@ -165,7 +165,7 @@ export const findById = async (context, user, userId) => {
     return INTERNAL_USERS[userId];
   }
   const data = await resolveUserByIdFromCache(context, userId);
-  if (!data) throw FunctionalError('User not found', { id: userId });
+  if (!data) return undefined;
   data.password = '*** Redacted ***';
   return data;
 };
