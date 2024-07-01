@@ -220,7 +220,7 @@ const StixDomainObjectAttackPatternsKillChain: FunctionComponent<StixDomainObjec
           <Filters
             availableFilterKeys={availableFilterKeys}
             helpers={helpers}
-            searchContext={{ entityTypes: ['Attack-Pattern'] }}
+            searchContext={{ entityTypes: ['stix-core-relationship'] }}
           />
         </Box>
         <div className={classes.buttons} >
@@ -229,7 +229,7 @@ const StixDomainObjectAttackPatternsKillChain: FunctionComponent<StixDomainObjec
             helpers={helpers}
             styleNumber={2}
             redirection
-            searchContext={{ entityTypes: ['Attack-Pattern'] }}
+            searchContext={{ entityTypes: ['stix-core-relationship'] }}
           />
         </div>
         <div style={{ float: 'right', margin: 0 }}>
