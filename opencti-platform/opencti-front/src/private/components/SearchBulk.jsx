@@ -340,20 +340,16 @@ const SearchBulk = () => {
                     );
                     if (resolvedStixCoreObjects.length > 0) {
                       return resolvedStixCoreObjects.map(
-                        (resolvedStixCoreObject) => ({
-                          id: resolvedStixCoreObject.id,
-                          type: resolvedStixCoreObject.entity_type,
-                          value: getMainRepresentative(resolvedStixCoreObject),
-                          labels: resolvedStixCoreObject.objectLabel,
-                          markings: resolvedStixCoreObject.objectMarking,
-                          containersNumber: resolvedStixCoreObject.containersNumber,
-                          updated_at: resolvedStixCoreObject.updated_at,
-                          author: R.pathOr(
-                            '',
-                            ['createdBy', 'name'],
-                            resolvedStixCoreObject,
-                          ),
-                          creators: (resolvedStixCoreObject.creators ?? [])
+                        (object) => ({
+                          id: object.id,
+                          type: object.entity_type,
+                          value: getMainRepresentative(object),
+                          labels: object.objectLabel,
+                          markings: object.objectMarking,
+                          containersNumber: object.containersNumber,
+                          updated_at: object.updated_at,
+                          author: object.createdBy?.name ?? '',
+                          creators: (object.creators ?? [])
                             .map((c) => c?.name)
                             .join(', '),
                           in_platform: true,
@@ -371,8 +367,9 @@ const SearchBulk = () => {
                   });
                 })
             ).flat();
+            const finalResult = R.uniqBy((o) => o.id, result);
             setLoading(false);
-            setResolvedEntities(result);
+            setResolvedEntities(finalResult);
             setPaginationOptions(searchPaginationOptions);
           } else {
             setResolvedEntities([]);
