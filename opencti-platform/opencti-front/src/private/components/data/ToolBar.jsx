@@ -210,6 +210,11 @@ const notMergableTypes = [
   'Task',
   'DeleteOperation',
 ];
+const notAddableTypes = ['Label', 'Vocabulary', 'Case-Template', 'DeleteOperation'];
+const notUpdatableTypes = ['Label', 'Vocabulary', 'Case-Template', 'Task', 'DeleteOperation'];
+const notScannableTypes = ['Label', 'Vocabulary', 'Case-Template', 'Task', 'DeleteOperation'];
+const notEnrichableTypes = ['Label', 'Vocabulary', 'Case-Template', 'Task', 'DeleteOperation'];
+const typesWithScore = ['Stix-Cyber-Observable', 'Indicator'];
 
 const Transition = React.forwardRef((props, ref) => (
   <Slide direction="up" ref={ref} {...props} />
@@ -407,10 +412,10 @@ class ToolBar extends Component {
           )?.values ?? [],
         );
     } else {
-      const selected = this.props.selectedElements;
-      const selectedTypes = R.uniq(
-        R.map((o) => o.entity_type, R.values(selected || {})),
-      );
+      const selectedElementsList = Object.values(this.props.selectedElements || {});
+      const selectedTypes = R.uniq(selectedElementsList
+        .map((o) => o.entity_type)
+        .filter((entity_type) => entity_type !== undefined));
       enrichType = R.head(selectedTypes);
     }
     // Get available connectors
@@ -739,7 +744,7 @@ class ToolBar extends Component {
     }
   }
 
-  renderFieldOptions(i) {
+  renderFieldOptions(i, typesHaveScore) {
     const { t } = this.props;
     const { actionsInputs } = this.state;
     const disabled = R.isNil(actionsInputs[i]?.type) || R.isEmpty(actionsInputs[i]?.type);
@@ -756,10 +761,12 @@ class ToolBar extends Component {
         { label: t('Marking definitions'), value: 'object-marking' },
         { label: t('Labels'), value: 'object-label' },
         { label: t('Author'), value: 'created-by' },
-        { label: t('Score'), value: 'x_opencti_score' },
         { label: t('Confidence'), value: 'confidence' },
         { label: t('Description'), value: 'description' },
       ];
+      if (typesHaveScore) {
+        options.push({ label: t('Score'), value: 'x_opencti_score' });
+      }
       if (this.props.type) {
         options.push({ label: t('Status'), value: 'x_opencti_workflow_id' });
       }
@@ -1312,38 +1319,25 @@ class ToolBar extends Component {
     } = this.props;
     const { actions, keptEntityId, mergingElement, actionsInputs, navOpen, promoteToContainer } = this.state;
     const isOpen = numberOfSelectedElements > 0;
-    const selectedTypes = [...new Set(Object.values(selectedElements || {})
+    const selectedElementsList = Object.values(selectedElements || {});
+    const selectedTypes = R.uniq(selectedElementsList
       .map((o) => o.entity_type)
-      .filter((entity_type) => entity_type !== undefined))];
+      .filter((entity_type) => entity_type !== undefined));
     const typesAreDifferent = selectedTypes.length > 1;
     const preventMerge = selectedTypes.at(0) === 'Vocabulary'
       && Object.values(selectedElements).some(({ builtIn }) => Boolean(builtIn));
     // region update
-    const notUpdatableTypes = ['Label', 'Vocabulary', 'Case-Template', 'Task', 'DeleteOperation'];
-    const entityTypeFilterValues = findFilterFromKey(filters?.filters ?? [], 'entity_type', 'eq')?.values
-      ?? [];
-    const typesAreNotUpdatable = R.includes(
-      R.uniq(
-        R.map((o) => o.entity_type, R.values(selectedElements || {})),
-      )[0],
-      notUpdatableTypes,
-    )
+    const entityTypeFilterValues = findFilterFromKey(filters?.filters ?? [], 'entity_type', 'eq')?.values ?? [];
+    const typesAreNotUpdatable = notUpdatableTypes.includes(selectedTypes[0])
       || (entityTypeFilterValues.length === 1
         && notUpdatableTypes.includes(entityTypeFilterValues[0]));
     // endregion
     // region rules
-    const notScannableTypes = ['Label', 'Vocabulary', 'Case-Template', 'Task', 'DeleteOperation'];
-    const typesAreNotScannable = R.includes(
-      R.uniq(
-        R.map((o) => o.entity_type, R.values(selectedElements || {})),
-      )[0],
-      notScannableTypes,
-    )
+    const typesAreNotScannable = notScannableTypes.includes(selectedTypes[0])
       || (entityTypeFilterValues.length === 1
         && notScannableTypes.includes(entityTypeFilterValues[0]));
     // endregion
     // region enrich
-    const notEnrichableTypes = ['Label', 'Vocabulary', 'Case-Template', 'Task', 'DeleteOperation'];
     const isManualEnrichSelect = !selectAll && selectedTypes.length === 1;
     const isAllEnrichSelect = selectAll
         && entityTypeFilterValues.length === 1
@@ -1354,21 +1348,11 @@ class ToolBar extends Component {
             && notEnrichableTypes.includes(entityTypeFilterValues[0]))
         || (!isManualEnrichSelect && !isAllEnrichSelect);
     // endregion
-    const typesAreNotMergable = R.includes(
-      R.uniq(R.map((o) => o.entity_type, R.values(selectedElements || {})))[0],
-      notMergableTypes,
-    );
+    const typesAreNotMergable = notMergableTypes.includes(selectedTypes[0]);
     const enableMerge = !typesAreNotMergable && !mergeDisable;
-    const notAddableTypes = ['Label', 'Vocabulary', 'Case-Template', 'DeleteOperation'];
-    const typesAreNotAddableInContainer = R.includes(
-      R.uniq(
-        R.map((o) => o.entity_type, R.values(selectedElements || {})),
-      )[0],
-      notAddableTypes,
-    )
+    const typesAreNotAddableInContainer = notAddableTypes.includes(selectedTypes[0])
       || (entityTypeFilterValues.length === 1
         && notScannableTypes.includes(entityTypeFilterValues[0]));
-    const selectedElementsList = Object.values(selectedElements || {});
     const titleCopy = this.titleCopy();
     let keptElement = null;
     let newAliases = [];
@@ -1390,9 +1374,11 @@ class ToolBar extends Component {
             .flat()
             .filter((alias) => alias !== null && alias !== undefined);
 
-        newAliases = [...new Set(names.concat(aliases).filter((o) => o && o.length > 0))];
+        newAliases = names.concat(aliases).filter((o) => o && o.length > 0);
       }
     }
+    const typesHaveScore = selectedTypes.every((selectedType) => typesWithScore.includes(selectedType))
+      && entityTypeFilterValues.every((filterType) => typesWithScore.includes(filterType));
     let paperClass;
     switch (variant) {
       case 'large':
@@ -1826,7 +1812,7 @@ class ToolBar extends Component {
                                       ', ',
                                       R.map(
                                         (o) => getMainRepresentative(o),
-                                        R.values(selectedElements || {}),
+                                        selectedElementsList,
                                       ),
                                     ),
                                     80,
@@ -1956,7 +1942,7 @@ class ToolBar extends Component {
                           <Grid item={true} xs={3}>
                             <FormControl className={classes.formControl}>
                               <InputLabel>{t('Field')}</InputLabel>
-                              {this.renderFieldOptions(i)}
+                              {this.renderFieldOptions(i, typesHaveScore)}
                             </FormControl>
                           </Grid>
                           <Grid item={true} xs={6}>
