@@ -131,16 +131,18 @@ const ThreatActorsIndividual = () => {
   const renderList = () => {
     const dataColumns = {
       name: {
-        flexSize: 30,
+        flexSize: 15,
       },
       threat_actor_types: {
         label: 'Type',
-        flexSize: 15,
+        flexSize: 13,
       },
-      objectMarking: { flexSize: 13 },
-      objectLabel: {},
-      x_opencti_workflow_id: { flexSize: 12 },
+      sophistication: {},
+      resource_level: {},
+      creator: {},
       modified: {},
+      objectMarking: { flexSize: 10 },
+      objectLabel: {},
     };
 
     const preloadedPaginationProps = {

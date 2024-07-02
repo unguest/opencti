@@ -125,15 +125,15 @@ const IntrusionSets = () => {
   const renderList = () => {
     const dataColumns = {
       name: {
-        flexSize: 30,
-      },
-      created: {
         flexSize: 15,
       },
-      objectMarking: { flexSize: 13 },
-      objectLabel: {},
-      x_opencti_workflow_id: { flexSize: 12 },
+      resource_level: {},
+      primary_motivation: {},
+      secondary_motivation: {},
+      creator: {},
       modified: {},
+      objectMarking: { flexSize: 10 },
+      objectLabel: {},
     };
 
     const preloadedPaginationProps = {
